@@ -17,6 +17,25 @@ from pathlib import Path
 from typing import Iterable
 
 LOG_PATH = Path("/tmp/protontrek.log")
+__version__ = "0.0.0-dev"  # replaced by the release workflow
+
+
+def restore_host_environment() -> None:
+    """Undo library paths injected by a PyInstaller bundle.
+
+    The frozen binary points LD_LIBRARY_PATH at its own bundled libraries;
+    Proton, Wine, flatpak and protontricks started from it must not inherit
+    that. The dynamic loader already read the value at startup, so changing
+    os.environ here only affects child processes.
+    """
+    if not getattr(sys, "frozen", False):
+        return
+    for name in ("LD_LIBRARY_PATH",):
+        original = os.environ.pop(name + "_ORIG", None)
+        if original is not None:
+            os.environ[name] = original
+        else:
+            os.environ.pop(name, None)
 
 LAUNCH_MODES: dict[str, tuple[str, str]] = {
     "runinprefix_start": (
@@ -68,6 +87,17 @@ NATIVE_LINUX_HINT = (
     "«Принудительно использовать инструмент совместимости» (лучше стабильный Proton, "
     "не Experimental), перезапустите игру и нажмите «Обновить»."
 )
+
+EXPERIMENTAL_PROTON_HINT = (
+    "Игра запущена в Proton Experimental. В нём трейнеры часто не находят процесс игры "
+    "или не показывают окно. Если трейнер пишет, что игра не найдена: Steam → Свойства "
+    "игры → Совместимость → выберите стабильный Proton (например, Proton 9.0 или GE-Proton), "
+    "перезапустите игру и нажмите «Обновить»."
+)
+
+
+def is_experimental_proton(path: Path | None) -> bool:
+    return bool(path) and "experimental" in path.name.lower()
 
 
 SOURCE_PRIORITY = {
@@ -565,25 +595,13 @@ def spawn_launch_process(
                 start_new_session=True,
             )
         else:
-            delay_cmd = [
-                sys.executable,
-                "-c",
-                (
-                    "import os, subprocess, sys, time; "
-                    "time.sleep(int(sys.argv[1])); "
-                    "cmd=sys.argv[2:]; "
-                    "subprocess.Popen(cmd, env=os.environ.copy(), cwd=os.getcwd(), "
-                    "stdout=open(os.environ['PROTONTREK_LOG_PATH'], 'ab'), "
-                    "stderr=subprocess.STDOUT, start_new_session=True)"
-                ),
-                str(delay_seconds),
-                *launch_cmd,
-            ]
-            delay_env = env.copy()
-            delay_env["PROTONTREK_LOG_PATH"] = str(log_path)
+            # Plain sh keeps this working inside a frozen (PyInstaller) build,
+            # where sys.executable is ProtonHook itself, not a Python interpreter.
+            delay_cmd = ["sh", "-c", 'sleep "$1"; shift; exec "$@"', "protonhook-delay",
+                         str(delay_seconds), *launch_cmd]
             process = subprocess.Popen(
                 delay_cmd,
-                env=delay_env,
+                env=env,
                 cwd=str(cwd),
                 stdout=log_handle,
                 stderr=subprocess.STDOUT,

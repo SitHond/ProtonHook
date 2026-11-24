@@ -5,3 +5,7 @@ node_modules/
 dist/
 out/
 *.log
+
+dist-release/
+build/
+*.spec.bak

@@ -16,6 +16,8 @@ except ModuleNotFoundError:
     ttk = None
 
 from protontrek_core import (
+    __version__,
+    restore_host_environment,
     DEFAULT_DELAY_SECONDS,
     DEFAULT_LAUNCH_MODE,
     LAUNCH_MODES,
@@ -464,6 +466,11 @@ def run_zenity_flow() -> int:
 
 
 def main() -> int:
+    restore_host_environment()
+    if "--version" in sys.argv[1:]:
+        print(f"ProtonHook {__version__}")
+        return 0
+
     if sys.platform != "linux":
         print("Эта утилита рассчитана на Linux с Steam/Proton.", file=sys.stderr)
         return 1
