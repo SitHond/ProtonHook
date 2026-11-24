@@ -1,0 +1,13 @@
+{
+  "name": "ProtonHook",
+  "author": "SitHond",
+  "flags": [
+    "debug"
+  ],
+  "api_version": 1,
+  "publish": {
+    "tags": ["utility", "proton", "steam"],
+    "description": "Launch a Windows trainer.exe inside a running Steam game's Proton prefix.",
+    "image": ""
+  }
+}
