@@ -43,7 +43,7 @@ jobs:
           .venv/bin/pip install "pyinstaller==6.22.3"
 
       - name: Build
-        run: PYINSTALLER=.venv/bin/pyinstaller packaging/build.sh "${{ steps.version.outputs.value }}"
+        run: PYINSTALLER=.venv/bin/pyinstaller bash packaging/build.sh "${{ steps.version.outputs.value }}"
 
       - name: Smoke test
         run: |
