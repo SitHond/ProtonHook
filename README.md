@@ -1,44 +1,78 @@
+<!-- SITHOND PROJECT README -->
+
 <div align="center">
+
+<sub>SITHOND / PROJECTS</sub>
+
+<br>
+
+<img src="assets/logo.svg" width="96" alt="ProtonHook logo">
 
 # ProtonHook
 
-**Запуск Windows-трейнеров для Steam-игр в Linux через Proton — в один клик.**
+**Windows trainers for Steam games on Linux. Native experience.**
 
-ProtonHook находит запущенную игру, берёт её Proton и префикс и запускает `trainer.exe` рядом с ней, а если что-то не работает — сам диагностирует и исправляет типичные проблемы.
+[![Release](https://img.shields.io/github/v/release/SitHond/ProtonHook?style=flat-square&color=A39AF5&label=release)](https://github.com/SitHond/ProtonHook/releases)
+[![License](https://img.shields.io/github/license/SitHond/ProtonHook?style=flat-square&color=A39AF5)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/SitHond/ProtonHook?style=flat-square&color=A39AF5)](https://github.com/SitHond/ProtonHook/stargazers)
+![Status](https://img.shields.io/badge/status-active-6FAE83?style=flat-square)
 
-[![Release](https://img.shields.io/github/v/release/SitHond/ProtonHook?label=%D1%80%D0%B5%D0%BB%D0%B8%D0%B7)](https://github.com/SitHond/ProtonHook/releases/latest)
-[![CI](https://github.com/SitHond/ProtonHook/actions/workflows/ci.yml/badge.svg)](https://github.com/SitHond/ProtonHook/actions/workflows/ci.yml)
-![Linux](https://img.shields.io/badge/platform-Linux%20%7C%20Steam%20Deck-blue)
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+<br>
 
-<img src="docs/screenshots/launch.png" alt="ProtonHook — вкладка «Запуск»" width="820">
+[![Website](https://img.shields.io/badge/Website-sithond.com-14151B?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://sithond.com)
+[![Discord](https://img.shields.io/badge/Join_Community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/GdQ68QhWaB)
+[![Download](https://img.shields.io/badge/Download-Releases-14151B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/SitHond/ProtonHook/releases/latest)
+
+<br>
+
+[Overview](#overview) ·
+[Features](#features) ·
+[Installation](#installation) ·
+[Usage](#usage) ·
+[Troubleshooting](#troubleshooting) ·
+[Community](#community)
+
+[English](README.md) · [Русский](README.ru.md)
 
 </div>
 
 ---
 
-## Возможности
+## Overview
 
-- 🎮 **Находит игры** — запущенные через Proton и все игры с Proton-префиксом в ваших библиотеках Steam (включая библиотеки на других дисках).
-- 🎯 **Запускает трейнер в правильном окружении** — тот же Proton, тот же префикс, тот же wineserver, что у игры. Три режима запуска и задержка старта.
-- 🩺 **Диагностика** — замечает нативную Linux-версию вместо Proton, Proton Experimental, отсутствие .NET для трейнеров, которым он нужен, и устаревшие сейвы.
-- 🛠 **Исправляет сам** — ставит .NET Framework 4.8 через protontricks с обходом известных сбоев и автоматическим откатом при неудаче, переносит сейвы Unity-игр между Linux- и Windows-версией, делает и восстанавливает резервные копии префикса.
-- 🧹 **Без ручной рутины** — закрывает старые копии трейнера перед запуском, запоминает трейнер для каждой игры и последнюю выбранную игру, сам ищет трейнер в `~/trainers` и `~/Downloads`.
-- 📖 **Встроенная справка** — что делать, если окно трейнера не появляется, трейнер не видит игру и т. д.
-- 🕹 **Плагин для Decky Loader** — запуск трейнера прямо из Quick Access Menu на Steam Deck.
+ProtonHook launches Windows trainers (`trainer.exe`) for Steam games that run through Proton on Linux and Steam Deck.
 
-## Скриншоты
+It finds the running game, takes its exact Proton build and prefix, and starts the trainer next to it, attached to the same Wine server. When something goes wrong — the game runs as a native Linux build, the trainer needs .NET, saves are out of sync — ProtonHook detects it and fixes it in one click.
 
-| Диагностика и исправления | Справка |
-| :---: | :---: |
-| <img src="docs/screenshots/diagnostics.png" alt="Вкладка «Диагностика»" width="420"> | <img src="docs/screenshots/help.png" alt="Вкладка «Справка»" width="420"> |
+<div align="center">
 
-## Установка
+<img src="assets/screenshots/en/launch.png" width="900" alt="ProtonHook — launch tab">
 
-### Готовый бинарник (рекомендуется)
+<sub>ProtonHook — launch tab</sub>
 
-Один исполняемый файл, GTK уже внутри — ничего ставить не нужно:
+</div>
+
+## Features
+
+- **Game detection** — running Proton games and every game with a Proton prefix across all Steam libraries, including other drives.
+- **Correct environment** — the trainer gets the game's Proton, prefix and Wine server; three launch modes and a start delay.
+- **Diagnostics** — spots native Linux runs, Proton Experimental, trainers that need .NET (including FLiNG loaders) and outdated saves.
+- **One-click fixes** — installs .NET Framework 4.8 via protontricks with automatic rollback on failure, copies Unity saves between the Linux and Windows builds, backs up and restores prefixes.
+- **No routine** — closes stale trainer instances, remembers the trainer for each game and finds trainers in `~/trainers` and `~/Downloads`.
+- **English and Russian** — switch the interface language from the header; built-in help for common problems.
+- **Decky Loader plugin** — launch a trainer from the Quick Access Menu on Steam Deck.
+
+## Installation
+
+### Requirements
+
+- Linux with Steam and Proton (desktop or Steam Deck).
+- The single-file binary bundles GTK; the `.pyz` build needs Python 3.10+ and PyGObject (GTK 3).
+- [protontricks](https://github.com/Matoking/protontricks) — only for the .NET installation fix.
+
+### Download
+
+Download the latest version from the [Releases](https://github.com/SitHond/ProtonHook/releases/latest) page, or install it from the terminal:
 
 ```bash
 curl -L -o ~/.local/bin/protonhook \
@@ -47,19 +81,14 @@ chmod +x ~/.local/bin/protonhook
 protonhook
 ```
 
-### Лёгкая версия (`.pyz`, ~100 КБ)
+| File | Description |
+| :--- | :--- |
+| `protonhook` | Single-file binary, GTK included |
+| `protonhook.pyz` | Lightweight build (~100 KB), uses system Python and PyGObject |
+| `ProtonHook-decky.zip` | Decky Loader plugin |
+| `SHA256SUMS` | Checksums |
 
-Если в системе уже есть Python 3.10+ и PyGObject (Fedora, Bazzite, большинство дистрибутивов с GNOME/KDE):
-
-```bash
-curl -L -o ~/.local/bin/protonhook \
-  https://github.com/SitHond/ProtonHook/releases/latest/download/protonhook.pyz
-chmod +x ~/.local/bin/protonhook
-```
-
-Контрольные суммы файлов — в `SHA256SUMS` на странице релиза.
-
-### Из исходников
+### Build from source
 
 ```bash
 git clone https://github.com/SitHond/ProtonHook.git
@@ -67,79 +96,7 @@ cd ProtonHook
 python3 steam_trainer_launcher.py
 ```
 
-Интерфейс — GTK 3 (PyGObject). Если его нет, используется `tkinter`, а если нет и его — пошаговые диалоги `zenity`.
-
-## Как пользоваться
-
-1. Запустите игру через Steam.
-2. Откройте ProtonHook — запущенная игра будет вверху списка с пометкой **●**.
-3. Выберите `trainer.exe` (в следующий раз ProtonHook подставит его сам) и нажмите **«Запустить в префиксе»**.
-
-Если трейнер не работает — загляните на вкладку **«Диагностика»**: там видно, что не так, и есть кнопки для исправления.
-
-## Частые проблемы
-
-| Симптом | Причина | Что делать |
-| --- | --- | --- |
-| «Игра запущена без Proton» | Steam запустил нативную Linux-версию | Steam → Свойства → Совместимость → стабильный Proton. Сейвы перенесите кнопкой «Сейв Linux → Windows» |
-| Окно трейнера не появляется | Proton Experimental | Выберите стабильный Proton (9 / 10 / 11 или GE-Proton) |
-| Трейнер открылся, но не видит игру | Версия трейнера ≠ версии игры, или трейнеру нужен настоящий .NET | Проверьте версию; на «Диагностике» нажмите «Установить .NET 4.8» (игра должна быть закрыта) |
-| Установка .NET не удалась | Известный сбой установщика .NET в новых Proton (MSI 1603) | ProtonHook сам откатит префикс; попробуйте другую версию трейнера |
-| Steam спрашивает о конфликте сохранений | Сейв перенесён, а в облаке старый | Выберите локальные файлы |
-
-> ⚠️ Используйте трейнеры только в одиночных играх. В играх с античитом (EAC, BattlEye и др.) это может привести к бану.
-
-## Как это работает
-
-1. Читает `libraryfolders.vdf` и `appmanifest_*.acf` всех библиотек Steam.
-2. Сканирует `/proc`, определяет `appid` игры по переменным окружения Steam/Proton, командной строке или пути к исполняемому файлу.
-3. Определяет Proton игры: из `STEAM_COMPAT_TOOL_PATH(S)` (пропуская контейнеры Steam Linux Runtime), из командной строки родительских процессов или из `compatdata/<appid>/config_info`.
-4. Запускает трейнер командой `proton runinprefix start /unix …` (или `runinprefix` / `run`) с окружением игры — трейнер подключается к тому же wineserver, что и игра.
-
-## Файлы и логи
-
-| Что | Где |
-| --- | --- |
-| Общий лог | `/tmp/protontrek.log` |
-| Лог запуска трейнера | `/tmp/protontrek-<игра>-<appid>.log` |
-| Резервные копии префиксов и сейвов | `~/ProtonHook-backups/` |
-| Настройки (трейнеры, последняя игра) | `~/.config/protonhook/settings.json` |
-
-## Плагин для Decky Loader
-
-Та же логика доступна как плагин для [Decky Loader](https://decky.xyz): выбор игры и запуск `trainer.exe` прямо из Quick Access Menu на Steam Deck, не сворачивая игру.
-
-**Установка:** скачайте `ProtonHook-decky.zip` со [страницы релиза](https://github.com/SitHond/ProtonHook/releases/latest), включите Developer Mode в настройках Decky Loader и выберите **Install Plugin from ZIP**.
-
-<details>
-<summary>Сборка и ручная установка</summary>
-
-Нужны Node.js 16.14+ и pnpm v9:
-
-```bash
-pnpm install
-pnpm run build   # соберёт dist/index.js
-```
-
-Скопируйте `plugin.json`, `package.json`, `main.py`, `protontrek_core.py` и папку `dist/` в `~/homebrew/plugins/ProtonHook` на Steam Deck и перезапустите Decky Loader.
-
-- В `plugin.json` намеренно нет флага `root`: бэкенд работает от пользователя `deck`, как Steam с игрой, — этого достаточно для чтения `/proc/<pid>/environ`.
-- Выбор `trainer.exe` идёт через встроенный файловый пикер Decky (`openFilePicker` из `@decky/api`).
-
-</details>
-
-## Разработка
-
-```
-steam_trainer_launcher.py  точка входа (GTK → tkinter → zenity)
-gtk_ui.py                  интерфейс GTK 3
-protontrek_core.py         поиск игр, Proton, префиксов и запуск трейнера
-protonhook_tools.py        диагностика, .NET, резервные копии, сейвы
-main.py, src/              плагин Decky Loader (бэкенд и фронтенд)
-packaging/                 сборка бинарника (PyInstaller) и .pyz
-```
-
-**Локальная сборка бинарника:**
+Single-file binary:
 
 ```bash
 python3 -m venv --system-site-packages .venv
@@ -147,13 +104,106 @@ python3 -m venv --system-site-packages .venv
 PYINSTALLER=.venv/bin/pyinstaller packaging/build.sh 0.1.0   # → dist-release/
 ```
 
-**Выпуск релиза:** достаточно запушить тег — GitHub Actions соберёт бинарник, `.pyz`, плагин Decky и опубликует релиз.
+## Usage
 
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+1. Start the game from Steam.
+2. Open ProtonHook — the running game is at the top of the list, marked with **●**.
+3. Choose `trainer.exe` (next time ProtonHook fills it in) and press **Launch in prefix**.
 
-## Лицензия
+If the trainer doesn't work, open the **Diagnostics** tab: it shows what is wrong and offers a fix.
 
-[MIT](LICENSE) © SitHond
+<div align="center">
+
+<img src="assets/screenshots/en/diagnostics.png" width="440" alt="Diagnostics tab">
+<img src="assets/screenshots/en/help.png" width="440" alt="Help tab">
+
+<sub>Diagnostics and built-in help</sub>
+
+</div>
+
+### Files and logs
+
+| Resource | Location |
+| :--- | :--- |
+| General log | `/tmp/protontrek.log` |
+| Trainer launch log | `/tmp/protontrek-<game>-<appid>.log` |
+| Prefix and save backups | `~/ProtonHook-backups/` |
+| Settings (language, trainers) | `~/.config/protonhook/settings.json` |
+
+### Decky Loader plugin
+
+Download `ProtonHook-decky.zip` from the [latest release](https://github.com/SitHond/ProtonHook/releases/latest), enable Developer Mode in Decky Loader settings and choose **Install Plugin from ZIP**.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+| :--- | :--- | :--- |
+| “The game is running without Proton” | Steam started the native Linux build | Steam → Properties → Compatibility → a stable Proton; copy saves with **Save Linux → Windows** |
+| The trainer window doesn't appear | Proton Experimental | Choose a stable Proton (9 / 10 / 11 or GE-Proton) |
+| The trainer can't see the game | Version mismatch, or the trainer needs real .NET | Check the trainer version; press **Install .NET 4.8** on the Diagnostics tab (game closed) |
+| .NET installation failed | Known .NET installer failure on newer Proton (MSI 1603) | ProtonHook rolls the prefix back automatically; try another trainer version |
+| Steam reports a cloud save conflict | The save was copied, the cloud has the old one | Choose the local files |
+
+> [!WARNING]
+> Use trainers in single-player games only. In games with anti-cheat (EAC, BattlEye, etc.) they can get you banned.
+
+## Technologies
+
+![Python](https://img.shields.io/badge/Python-14151B?style=flat-square&logo=python&logoColor=A39AF5)
+![GTK](https://img.shields.io/badge/GTK_3-14151B?style=flat-square&logo=gtk&logoColor=A39AF5)
+![Linux](https://img.shields.io/badge/Linux-14151B?style=flat-square&logo=linux&logoColor=A39AF5)
+![Steam](https://img.shields.io/badge/Steam_·_Proton-14151B?style=flat-square&logo=steam&logoColor=A39AF5)
+![TypeScript](https://img.shields.io/badge/TypeScript-14151B?style=flat-square&logo=typescript&logoColor=A39AF5)
+
+## Community
+
+<div align="center">
+
+### SitHond Community
+
+**All projects. One community.**
+
+The central community for all SitHond projects,
+experiments, software, and games.
+
+Discuss development, suggest new features,
+get help, share feedback, and follow future releases.
+
+[![Join Discord](https://img.shields.io/badge/Join_the_Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/GdQ68QhWaB)
+
+[Website](https://sithond.com) ·
+[GitHub](https://github.com/SitHond) ·
+[Discord](https://discord.gg/GdQ68QhWaB)
+
+</div>
+
+## Contributing
+
+Contributions, suggestions, and feedback are welcome.
+
+- Report bugs through [GitHub Issues](https://github.com/SitHond/ProtonHook/issues).
+- Discuss ideas in the Discord community.
+- Submit pull requests for improvements. New interface strings need an English translation in `i18n.py` — CI checks it with `tests/test_i18n.py`.
+
+## License
+
+This project is distributed under the terms described
+in the [LICENSE](LICENSE) file.
+
+---
+
+<div align="center">
+
+<sub>PART OF THE SITHOND ECOSYSTEM</sub>
+
+### sithond.
+
+**Simple by design. Built with curiosity.**
+
+[Website](https://sithond.com) ·
+[GitHub](https://github.com/SitHond) ·
+[Discord](https://discord.gg/GdQ68QhWaB)
+
+<sub>Made with curiosity by SitHond.</sub>
+
+</div>

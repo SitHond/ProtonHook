@@ -12,7 +12,7 @@ VERSION="${1:-0.0.0-dev}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${OUT:-$ROOT/dist-release}"
 PYINSTALLER="${PYINSTALLER:-pyinstaller}"
-SOURCES=(steam_trainer_launcher.py protontrek_core.py protonhook_tools.py gtk_ui.py)
+SOURCES=(steam_trainer_launcher.py protontrek_core.py protonhook_tools.py gtk_ui.py i18n.py)
 
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT

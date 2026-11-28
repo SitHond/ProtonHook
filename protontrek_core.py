@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from i18n import tr
+
 LOG_PATH = Path("/tmp/protontrek.log")
 __version__ = "0.0.0-dev"  # replaced by the release workflow
 
@@ -573,7 +575,7 @@ def build_launch_command(proton_script: Path, trainer_path: Path, mode: str) -> 
             "run",
             str(trainer_path),
         ]
-    raise RuntimeError(f"Неизвестный режим запуска: {mode}")
+    raise RuntimeError(tr("Неизвестный режим запуска: {mode}", mode=mode))
 
 
 def spawn_launch_process(
@@ -620,15 +622,15 @@ def launch_trainer(
     steam_root: Path | None = None,
 ) -> tuple[subprocess.Popen[bytes], Path]:
     if game.native_linux:
-        raise RuntimeError(NATIVE_LINUX_HINT)
+        raise RuntimeError(tr(NATIVE_LINUX_HINT))
 
     proton_dir = game.proton_path
     if not proton_dir:
-        raise RuntimeError("Не удалось определить путь к Proton для этой игры.")
+        raise RuntimeError(tr("Не удалось определить путь к Proton для этой игры."))
 
     proton_script = proton_dir / "proton"
     if not proton_script.exists():
-        raise RuntimeError(f"Файл Proton не найден: {proton_script}")
+        raise RuntimeError(tr("Файл Proton не найден: {path}", path=proton_script))
 
     env = build_launch_env(game, trainer_path, steam_root)
     log_path = trainer_log_path(game)

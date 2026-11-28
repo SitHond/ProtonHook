@@ -75,7 +75,7 @@ jobs:
       - name: Package
         run: |
           mkdir -p out/ProtonHook/dist
-          cp plugin.json package.json main.py protontrek_core.py LICENSE out/ProtonHook/
+          cp plugin.json package.json main.py protontrek_core.py i18n.py LICENSE out/ProtonHook/
           cp dist/index.js out/ProtonHook/dist/
           (cd out && zip -r ProtonHook-decky.zip ProtonHook)
       - uses: actions/upload-artifact@v4

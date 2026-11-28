@@ -37,7 +37,6 @@ from protontrek_core import (  # noqa: E402
 from protonhook_tools import (  # noqa: E402
     BACKUP_ROOT,
     DOTNET_REAL,
-    HELP_TEXT,
     PrefixGame,
     close_trainer_instances,
     copy_saves,
@@ -49,8 +48,10 @@ from protonhook_tools import (  # noqa: E402
     prefix_dotnet_status,
     prefix_in_use,
     read_exe_info,
+    help_text,
     restore_prefix,
 )
+from i18n import LANGUAGES, detect_language, get_language, set_language, tr  # noqa: E402
 
 SETTINGS_PATH = Path.home() / ".config/protonhook/settings.json"
 TRAINER_SEARCH_DIRS = [Path.home() / "trainers", Path.home() / "Trainers", Path.home() / "Downloads",
@@ -114,12 +115,20 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
     # ================================================================ UI
 
     def _build_ui(self) -> None:
-        header = Gtk.HeaderBar(title="ProtonHook", subtitle="Трейнеры для игр в Proton")
+        header = Gtk.HeaderBar(title="ProtonHook", subtitle=tr("Трейнеры для игр в Proton"))
         header.set_show_close_button(True)
         refresh_btn = Gtk.Button.new_from_icon_name("view-refresh-symbolic", Gtk.IconSize.BUTTON)
-        refresh_btn.set_tooltip_text("Обновить список игр")
+        refresh_btn.set_tooltip_text(tr("Обновить список игр"))
         refresh_btn.connect("clicked", lambda _b: self.refresh_games())
         header.pack_start(refresh_btn)
+        self.language_combo = Gtk.ComboBoxText()
+        for code, name in LANGUAGES.items():
+            self.language_combo.append(code, name)
+        self.language_combo.set_active_id(get_language())
+        self.language_combo.set_tooltip_text(tr("Язык интерфейса"))
+        self.language_combo.set_valign(Gtk.Align.CENTER)
+        self.language_combo.connect("changed", self.on_language_changed)
+        header.pack_end(self.language_combo)
         self.spinner = Gtk.Spinner()
         header.pack_end(self.spinner)
         self.set_titlebar(header)
@@ -144,9 +153,9 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         # ---- left: games
         left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin=12)
         title = Gtk.Label(xalign=0)
-        title.set_markup("<b>Игры с Proton-префиксом</b>")
+        title.set_markup("<b>" + tr("Игры с Proton-префиксом") + "</b>")
         left.pack_start(title, False, False, 0)
-        self.status_label = Gtk.Label(xalign=0, label="Поиск Steam...")
+        self.status_label = Gtk.Label(xalign=0, label=tr("Поиск Steam..."))
         self.status_label.get_style_context().add_class("dim-label")
         left.pack_start(self.status_label, False, False, 0)
         self.game_list = Gtk.ListBox()
@@ -160,9 +169,9 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
 
         # ---- right: tabs
         self.notebook = Gtk.Notebook()
-        self.notebook.append_page(self._build_launch_tab(), Gtk.Label(label="Запуск"))
-        self.notebook.append_page(self._build_diag_tab(), Gtk.Label(label="Диагностика"))
-        self.notebook.append_page(self._build_help_tab(), Gtk.Label(label="Справка"))
+        self.notebook.append_page(self._build_launch_tab(), Gtk.Label(label=tr("Запуск")))
+        self.notebook.append_page(self._build_diag_tab(), Gtk.Label(label=tr("Диагностика")))
+        self.notebook.append_page(self._build_help_tab(), Gtk.Label(label=tr("Справка")))
         paned.pack2(self.notebook, resize=True, shrink=False)
 
     def _build_launch_tab(self) -> Gtk.Widget:
@@ -182,9 +191,9 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
             row += 1
 
         self.state_value = self._value_label()
-        add_row("Состояние", self.state_value)
+        add_row(tr("Состояние"), self.state_value)
         self.prefix_value = self._value_label()
-        add_row("Префикс", self.prefix_value)
+        add_row(tr("Префикс"), self.prefix_value)
         self.proton_value = self._value_label()
         add_row("Proton", self.proton_value)
 
@@ -194,29 +203,29 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         process_scroller.set_shadow_type(Gtk.ShadowType.IN)
         process_scroller.set_min_content_height(80)
         process_scroller.add(self.process_view)
-        add_row("Процесс", process_scroller, expand=True)
+        add_row(tr("Процесс"), process_scroller, expand=True)
 
         trainer_box = Gtk.Box(spacing=6)
-        self.trainer_entry = Gtk.Entry(placeholder_text="Путь к trainer.exe")
+        self.trainer_entry = Gtk.Entry(placeholder_text=tr("Путь к trainer.exe"))
         self.trainer_entry.connect("changed", lambda _e: self._remember_trainer())
         trainer_box.pack_start(self.trainer_entry, True, True, 0)
-        pick_btn = Gtk.Button(label="Выбрать…")
+        pick_btn = Gtk.Button(label=tr("Выбрать…"))
         pick_btn.connect("clicked", self.on_pick_trainer)
         trainer_box.pack_start(pick_btn, False, False, 0)
-        add_row("Трейнер", trainer_box)
+        add_row(tr("Трейнер"), trainer_box)
 
         self.mode_combo = Gtk.ComboBoxText()
         for key, (label, description) in LAUNCH_MODES.items():
-            self.mode_combo.append(key, f"{label} — {description}")
+            self.mode_combo.append(key, f"{label} — {tr(description)}")
         self.mode_combo.set_active_id(DEFAULT_LAUNCH_MODE)
-        add_row("Режим запуска", self.mode_combo)
+        add_row(tr("Режим запуска"), self.mode_combo)
 
         self.delay_spin = Gtk.SpinButton.new_with_range(0, 600, 1)
         self.delay_spin.set_value(int(DEFAULT_DELAY_SECONDS))
         self.delay_spin.set_halign(Gtk.Align.START)
-        add_row("Задержка, сек", self.delay_spin)
+        add_row(tr("Задержка, сек"), self.delay_spin)
 
-        self.launch_btn = Gtk.Button(label="Запустить в префиксе")
+        self.launch_btn = Gtk.Button(label=tr("Запустить в префиксе"))
         self.launch_btn.get_style_context().add_class("suggested-action")
         self.launch_btn.set_halign(Gtk.Align.END)
         self.launch_btn.connect("clicked", self.on_launch)
@@ -241,20 +250,20 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
             self.action_buttons.append(button)
             return button
 
-        self.dotnet_btn = add_action("Установить .NET 4.8", "Нужно для большинства .NET-трейнеров (FLiNG и др.). "
-                                     "Игра должна быть закрыта. Сначала делается резервная копия префикса.",
+        self.dotnet_btn = add_action(tr("Установить .NET 4.8"), tr("Нужно для большинства .NET-трейнеров (FLiNG и др.). Игра должна быть закрыта. "
+                                     "Сначала делается резервная копия префикса."),
                                      self.on_install_dotnet)
-        add_action("Резервная копия префикса", f"Архив префикса в {BACKUP_ROOT}", self.on_backup_prefix)
-        add_action("Восстановить префикс…", "Вернуть префикс из резервной копии", self.on_restore_prefix)
-        self.save_l2w_btn = add_action("Сейв Linux → Windows", "Перенести сейв Unity-игры из нативной версии в Proton",
+        add_action(tr("Резервная копия префикса"), tr("Архив префикса в {path}", path=BACKUP_ROOT), self.on_backup_prefix)
+        add_action(tr("Восстановить префикс…"), tr("Вернуть префикс из резервной копии"), self.on_restore_prefix)
+        self.save_l2w_btn = add_action(tr("Сейв Linux → Windows"), tr("Перенести сейв Unity-игры из нативной версии в Proton"),
                                        lambda: self.on_copy_saves(to_windows=True))
-        self.save_w2l_btn = add_action("Сейв Windows → Linux", "Перенести сейв Unity-игры из Proton в нативную версию",
+        self.save_w2l_btn = add_action(tr("Сейв Windows → Linux"), tr("Перенести сейв Unity-игры из Proton в нативную версию"),
                                        lambda: self.on_copy_saves(to_windows=False))
-        add_action("Перепроверить", "Заново выполнить проверки", self.update_diagnostics)
+        add_action(tr("Перепроверить"), tr("Заново выполнить проверки"), self.update_diagnostics)
         box.pack_start(actions, False, False, 0)
 
         log_title = Gtk.Label(xalign=0)
-        log_title.set_markup("<b>Журнал действий</b>")
+        log_title.set_markup("<b>" + tr("Журнал действий") + "</b>")
         box.pack_start(log_title, False, False, 0)
         self.log_view = Gtk.TextView(editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD_CHAR)
         self.log_view.set_monospace(True)
@@ -266,7 +275,7 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
 
     def _build_help_tab(self) -> Gtk.Widget:
         label = Gtk.Label(xalign=0, yalign=0, margin=16)
-        label.set_markup(HELP_TEXT)
+        label.set_markup(help_text())
         label.set_line_wrap(True)
         label.set_selectable(True)
         scroller = Gtk.ScrolledWindow()
@@ -280,6 +289,21 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         label.set_line_wrap(True)
         label.set_line_wrap_mode(Pango.WrapMode.CHAR)
         return label
+
+    def on_language_changed(self, combo: Gtk.ComboBoxText) -> None:
+        code = combo.get_active_id()
+        if not code or code == get_language():
+            return
+        if self.busy:
+            combo.set_active_id(get_language())
+            self.show_message(tr("Уже выполняется другое действие — дождитесь окончания."), Gtk.MessageType.WARNING)
+            return
+        set_language(code)
+        self.settings["language"] = code
+        save_settings(self.settings)
+        # Rebuild the window so every label is created in the new language.
+        open_window(self.get_application())
+        self.destroy()
 
     # ================================================================ messages
 
@@ -328,8 +352,8 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         self.hide_message()
 
         if not self.steam_root:
-            self.status_label.set_text("Steam не найден")
-            self.show_message("Steam не найден. Проверьте стандартный путь установки.", Gtk.MessageType.ERROR)
+            self.status_label.set_text(tr("Steam не найден"))
+            self.show_message(tr("Steam не найден. Проверьте стандартный путь установки."), Gtk.MessageType.ERROR)
             self.clear_details()
             return False
 
@@ -354,7 +378,7 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
             name.set_ellipsize(Pango.EllipsizeMode.END)
             meta_text = f"appid {entry.prefix.app.app_id}"
             if entry.running:
-                meta_text += " · запущена" + (" без Proton" if entry.running.native_linux else "")
+                meta_text += " · " + tr("запущена") + (tr(" без Proton") if entry.running.native_linux else "")
             meta = Gtk.Label(xalign=0, label=meta_text)
             meta.get_style_context().add_class("dim-label")
             row_box.pack_start(name, False, False, 0)
@@ -362,9 +386,9 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
             self.game_list.add(row_box)
         self.game_list.show_all()
 
-        self.status_label.set_text(f"Запущено: {len(running)} · всего: {len(self.entries)}")
+        self.status_label.set_text(tr("Запущено: {running} · всего: {total}", running=len(running), total=len(self.entries)))
         if not self.entries:
-            self.show_message("Игры с Proton-префиксом не найдены.", Gtk.MessageType.WARNING)
+            self.show_message(tr("Игры с Proton-префиксом не найдены."), Gtk.MessageType.WARNING)
             self.clear_details()
             return False
 
@@ -378,8 +402,8 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         # Scroll the selection into view once the list has been allocated.
         GLib.idle_add(lambda: (selected_row.grab_focus(), False)[1])
         if not running:
-            self.show_message("Запущенных игр нет. Запустите игру через Steam и нажмите «Обновить». "
-                              "Диагностика и исправления доступны и для закрытых игр.",
+            self.show_message(tr("Запущенных игр нет. Запустите игру через Steam и нажмите «Обновить». "
+                                 "Диагностика и исправления доступны и для закрытых игр."),
                               Gtk.MessageType.INFO)
         return False
 
@@ -424,25 +448,25 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
 
         self.prefix_value.set_text(str(prefix.app.prefix_dir))
         if game is None:
-            self.state_value.set_text("Не запущена — запустите игру через Steam")
-            self.proton_value.set_text(str(prefix.proton_path) if prefix.proton_path else "Не определён")
+            self.state_value.set_text(tr("Не запущена — запустите игру через Steam"))
+            self.proton_value.set_text(str(prefix.proton_path) if prefix.proton_path else tr("Не определён"))
             self.process_view.get_buffer().set_text("")
             self.launch_btn.set_sensitive(False)
         else:
-            self.state_value.set_text("Запущена" + (" без Proton (нативная Linux-версия)" if game.native_linux
-                                                     else " через Proton"))
-            self.proton_value.set_text("Не используется" if game.native_linux else str(game.proton_path))
+            self.state_value.set_text(tr("Запущена без Proton (нативная Linux-версия)") if game.native_linux
+                                      else tr("Запущена через Proton"))
+            self.proton_value.set_text(tr("Не используется") if game.native_linux else str(game.proton_path))
             self.process_view.get_buffer().set_text(
-                f"PID: {game.pid}\nИмя: {game.process_name}\nИсточник appid: {game.source}\n"
-                f"Команда:\n{game.command}"
+                tr("PID: {pid}\nИмя: {name}\nИсточник appid: {source}\nКоманда:\n{command}",
+                   pid=game.pid, name=game.process_name, source=game.source, command=game.command)
             )
             self.launch_btn.set_sensitive(not game.native_linux and not self.busy)
 
         self.update_diagnostics()
         if game and game.native_linux:
-            self.show_message(NATIVE_LINUX_HINT, Gtk.MessageType.WARNING)
+            self.show_message(tr(NATIVE_LINUX_HINT), Gtk.MessageType.WARNING)
         elif is_experimental_proton(prefix.proton_path):
-            self.show_message(EXPERIMENTAL_PROTON_HINT, Gtk.MessageType.WARNING)
+            self.show_message(tr(EXPERIMENTAL_PROTON_HINT), Gtk.MessageType.WARNING)
         elif game is not None:
             self.hide_message()
 
@@ -476,7 +500,7 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
     def run_task(self, title: str, func: Callable[[], object]) -> None:
         """Run a long operation in a thread; the UI stays responsive."""
         if self.busy:
-            self.show_message("Уже выполняется другое действие — дождитесь окончания.", Gtk.MessageType.WARNING)
+            self.show_message(tr("Уже выполняется другое действие — дождитесь окончания."), Gtk.MessageType.WARNING)
             return
         self.busy = True
         for button in self.action_buttons:
@@ -485,13 +509,13 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         self.spinner.start()
         self.notebook.set_current_page(1)
         self.log(f"=== {title} ===")
-        self.show_message(f"{title}… Ход выполнения — на вкладке «Диагностика».", Gtk.MessageType.INFO)
+        self.show_message(tr("{title}… Ход выполнения — на вкладке «Диагностика».", title=title), Gtk.MessageType.INFO)
 
         def worker() -> None:
             try:
                 result = func()
             except Exception as exc:  # noqa: BLE001
-                self.log(f"✖ Ошибка: {exc}")
+                self.log(tr("✖ Ошибка: {error}", error=exc))
                 result = False
             GLib.idle_add(finish, result)
 
@@ -501,7 +525,7 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
             for button in self.action_buttons:
                 button.set_sensitive(True)
             ok = result is not False
-            self.show_message(f"{title}: {'готово' if ok else 'не удалось — см. журнал'}.",
+            self.show_message(tr("{title}: {result}.", title=title, result=tr("готово") if ok else tr("не удалось — см. журнал")),
                               Gtk.MessageType.INFO if ok else Gtk.MessageType.ERROR)
             self.refresh_games()
             return False
@@ -511,10 +535,10 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
     def _closed_entry(self) -> GameEntry | None:
         entry = self.current_entry()
         if not entry:
-            self.show_message("Сначала выберите игру.", Gtk.MessageType.ERROR)
+            self.show_message(tr("Сначала выберите игру."), Gtk.MessageType.ERROR)
             return None
         if entry.running or prefix_in_use(entry.prefix.app.prefix_dir):
-            self.show_message("Закройте игру и трейнер — это действие нельзя выполнять, пока префикс используется.",
+            self.show_message(tr("Закройте игру и трейнер — это действие нельзя выполнять, пока префикс используется."),
                               Gtk.MessageType.WARNING)
             return None
         return entry
@@ -522,23 +546,23 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
     def on_install_dotnet(self) -> None:
         entry = self._closed_entry()
         if entry:
-            self.run_task(f"Установка .NET 4.8 для «{entry.prefix.app.name}»",
+            self.run_task(tr("Установка .NET 4.8 для «{name}»", name=entry.prefix.app.name),
                           lambda: install_dotnet48(entry.prefix, self.log))
 
     def on_backup_prefix(self) -> None:
         entry = self._closed_entry()
         if entry:
-            self.run_task("Резервная копия префикса", lambda: backup_prefix(entry.prefix, self.log))
+            self.run_task(tr("Резервная копия префикса"), lambda: backup_prefix(entry.prefix, self.log))
 
     def on_restore_prefix(self) -> None:
         entry = self._closed_entry()
         if not entry:
             return
-        dialog = Gtk.FileChooserNative(title="Выберите резервную копию префикса", transient_for=self,
-                                       action=Gtk.FileChooserAction.OPEN, accept_label="Восстановить",
-                                       cancel_label="Отмена")
+        dialog = Gtk.FileChooserNative(title=tr("Выберите резервную копию префикса"), transient_for=self,
+                                       action=Gtk.FileChooserAction.OPEN, accept_label=tr("Восстановить"),
+                                       cancel_label=tr("Отмена"))
         archive_filter = Gtk.FileFilter()
-        archive_filter.set_name("Архивы префикса (*.tar.gz)")
+        archive_filter.set_name(tr("Архивы префикса (*.tar.gz)"))
         archive_filter.add_pattern("*.tar.gz")
         dialog.add_filter(archive_filter)
         if BACKUP_ROOT.is_dir():
@@ -546,7 +570,7 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         archive = dialog.get_filename() if dialog.run() == Gtk.ResponseType.ACCEPT else None
         dialog.destroy()
         if archive:
-            self.run_task("Восстановление префикса", lambda: restore_prefix(entry.prefix, Path(archive), self.log))
+            self.run_task(tr("Восстановление префикса"), lambda: restore_prefix(entry.prefix, Path(archive), self.log))
 
     def on_copy_saves(self, to_windows: bool) -> None:
         entry = self._closed_entry()
@@ -554,26 +578,26 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
             return
         saves = find_unity_saves(entry.prefix)
         if not saves:
-            self.show_message("Не удалось найти сейвы: перенос работает для Unity-игр.", Gtk.MessageType.WARNING)
+            self.show_message(tr("Не удалось найти сейвы: перенос работает для Unity-игр."), Gtk.MessageType.WARNING)
             return
         source, target = (saves.linux_dir, saves.windows_dir) if to_windows else (saves.windows_dir, saves.linux_dir)
         label = f"{entry.prefix.app.app_id}-{'l2w' if to_windows else 'w2l'}"
-        self.run_task("Перенос сейва " + ("Linux → Windows" if to_windows else "Windows → Linux"),
+        self.run_task(tr("Перенос сейва Linux → Windows") if to_windows else tr("Перенос сейва Windows → Linux"),
                       lambda: copy_saves(source, target, label, self.log))
 
     # ================================================================ launch
 
     def on_pick_trainer(self, _button: Gtk.Button) -> None:
-        dialog = Gtk.FileChooserNative(title="Выберите trainer.exe", transient_for=self,
-                                       action=Gtk.FileChooserAction.OPEN, accept_label="Выбрать",
-                                       cancel_label="Отмена")
+        dialog = Gtk.FileChooserNative(title=tr("Выберите trainer.exe"), transient_for=self,
+                                       action=Gtk.FileChooserAction.OPEN, accept_label=tr("Выбрать"),
+                                       cancel_label=tr("Отмена"))
         exe_filter = Gtk.FileFilter()
-        exe_filter.set_name("Windows executables (*.exe)")
+        exe_filter.set_name(tr("Windows-программы (*.exe)"))
         exe_filter.add_pattern("*.exe")
         exe_filter.add_pattern("*.EXE")
         dialog.add_filter(exe_filter)
         all_filter = Gtk.FileFilter()
-        all_filter.set_name("Все файлы")
+        all_filter.set_name(tr("Все файлы"))
         all_filter.add_pattern("*")
         dialog.add_filter(all_filter)
         current = self.current_trainer()
@@ -588,14 +612,14 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         entry = self.current_entry()
         game = entry.running if entry else None
         if not entry or not game:
-            self.show_message("Сначала запустите игру и выберите её в списке.", Gtk.MessageType.ERROR)
+            self.show_message(tr("Сначала запустите игру и выберите её в списке."), Gtk.MessageType.ERROR)
             return
         trainer_path = self.current_trainer()
         if not trainer_path:
-            self.show_message("Сначала выберите trainer.exe.", Gtk.MessageType.ERROR)
+            self.show_message(tr("Сначала выберите trainer.exe."), Gtk.MessageType.ERROR)
             return
         if not trainer_path.is_file():
-            self.show_message(f"Не найден файл: {trainer_path}", Gtk.MessageType.ERROR)
+            self.show_message(tr("Не найден файл: {path}", path=trainer_path), Gtk.MessageType.ERROR)
             return
 
         closed = close_trainer_instances(trainer_path)
@@ -604,39 +628,47 @@ class ProtonHookWindow(Gtk.ApplicationWindow):
         try:
             _process, log_path = launch_trainer(game, trainer_path, mode, delay_seconds, self.steam_root)
         except Exception as exc:  # noqa: BLE001
-            self.show_message(f"Ошибка запуска: {exc}", Gtk.MessageType.ERROR)
+            self.show_message(tr("Ошибка запуска: {error}", error=exc), Gtk.MessageType.ERROR)
             return
         self._remember_trainer()
 
-        start_text = "сразу" if delay_seconds == 0 else f"через {delay_seconds} сек"
-        text = (f"Трейнер запускается для «{game.app.name}» ({launch_mode_label(mode)}, {start_text}).\n"
-                f"Лог: {log_path}")
+        start_text = tr("сразу") if delay_seconds == 0 else tr("через {n} сек", n=delay_seconds)
+        text = tr("Трейнер запускается для «{name}» ({mode}, {start}).\nЛог: {log}",
+                  name=game.app.name, mode=launch_mode_label(mode), start=start_text, log=log_path)
         if closed:
-            text += f"\nЗакрыто старых копий трейнера: {closed}."
+            text += tr("\nЗакрыто старых копий трейнера: {n}.", n=closed)
 
         info = read_exe_info(trainer_path)
         if info and info.is_dotnet and prefix_dotnet_status(entry.prefix.pfx) != DOTNET_REAL:
-            text += ("\n\nТрейнер написан на .NET, а в префиксе нет настоящего .NET Framework. "
-                     "Если трейнер не увидит игру — закройте игру и установите .NET 4.8.")
+            text += tr("\n\nТрейнер написан на .NET, а в префиксе нет настоящего .NET Framework. "
+                       "Если трейнер не увидит игру — закройте игру и установите .NET 4.8.")
             self.show_message(text, Gtk.MessageType.WARNING,
-                              action=("Открыть диагностику", lambda: self.notebook.set_current_page(1)))
+                              action=(tr("Открыть диагностику"), lambda: self.notebook.set_current_page(1)))
         else:
             self.show_message(text, Gtk.MessageType.INFO)
         self.update_diagnostics()
 
 
+def open_window(app: Gtk.Application) -> ProtonHookWindow:
+    window = ProtonHookWindow(app)
+    window.show_all()
+    window.info_bar.set_revealed(False)
+    window.info_action_btn.hide()
+    window.present()
+    return window
+
+
 def run() -> int:
+    set_language(load_settings().get("language") or detect_language())
     app = Gtk.Application(application_id="io.github.protonhook.ProtonHook")
 
     def on_activate(application: Gtk.Application) -> None:
         # A second launch just raises the existing window.
         window = application.get_active_window()
         if window is None:
-            window = ProtonHookWindow(application)
-            window.show_all()
-            window.info_bar.set_revealed(False)
-            window.info_action_btn.hide()
-        window.present()
+            open_window(application)
+        else:
+            window.present()
 
     app.connect("activate", on_activate)
     return app.run(None)

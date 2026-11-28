@@ -29,6 +29,7 @@ from protontrek_core import (
     read_proc_bytes,
     read_text_safe,
 )
+from i18n import get_language, tr
 
 Log = Callable[[str], None]
 
@@ -207,10 +208,10 @@ def backup_prefix(game: PrefixGame, log: Log) -> Path:
     BACKUP_ROOT.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     target = BACKUP_ROOT / f"prefix-{game.app.app_id}-{stamp}.tar.gz"
-    log(f"Резервная копия префикса → {target}")
+    log(tr("Резервная копия префикса → {path}", path=target))
     with tarfile.open(target, "w:gz") as tar:
         tar.add(game.app.prefix_dir, arcname=game.app.app_id)
-    log(f"Готово, {target.stat().st_size // (1024 * 1024)} МБ")
+    log(tr("Готово, {mb} МБ", mb=target.stat().st_size // (1024 * 1024)))
     return target
 
 
@@ -253,7 +254,7 @@ def ensure_flatpak_access(paths: list[Path], log: Log) -> None:
     for path in needed:
         if str(path) in current:
             continue
-        log(f"Выдаю protontricks доступ к {path}")
+        log(tr("Выдаю protontricks доступ к {path}", path=path))
         subprocess.run(
             ["flatpak", "override", "--user", f"--filesystem={path}", PROTONTRICKS_FLATPAK],
             check=False,
@@ -278,14 +279,14 @@ def run_streaming(cmd: list[str], env: dict[str, str], log: Log) -> int:
 def install_dotnet48(game: PrefixGame, log: Log) -> bool:
     """Install .NET Framework 4.8 into the game's prefix, as automatically as possible."""
     if prefix_in_use(game.app.prefix_dir):
-        log("Префикс занят: закройте игру и трейнер, затем повторите.")
+        log(tr("Префикс занят: закройте игру и трейнер, затем повторите."))
         return False
     if not game.proton_path:
-        log("Не удалось определить Proton этой игры. Запустите игру через Steam хотя бы раз.")
+        log(tr("Не удалось определить Proton этой игры. Запустите игру через Steam хотя бы раз."))
         return False
     base = protontricks_base()
     if not base:
-        log("protontricks не найден. Установите его: flatpak install flathub " + PROTONTRICKS_FLATPAK)
+        log(tr("protontricks не найден. Установите его: {cmd}", cmd="flatpak install flathub " + PROTONTRICKS_FLATPAK))
         return False
     cmd_base, is_flatpak = base
 
@@ -297,10 +298,9 @@ def install_dotnet48(game: PrefixGame, log: Log) -> bool:
         return True
     # A failed install leaves the prefix without wine-mono and without .NET,
     # which is worse than before. Roll back automatically.
-    log("Откатываю префикс к состоянию до установки…")
+    log(tr("Откатываю префикс к состоянию до установки…"))
     restore_prefix(game, backup, log, make_backup=False)
-    log("Префикс возвращён как был (с wine-mono). .NET 4.8 в этом Proton установить не удалось — "
-        "см. «Справка».")
+    log(tr("Префикс возвращён как был (с wine-mono). .NET 4.8 в этом Proton установить не удалось — см. «Справка»."))
     return False
 
 
@@ -313,29 +313,29 @@ def _install_dotnet48_steps(game: PrefixGame, cmd_base: list[str], is_flatpak: b
     env["PROTON_VERSION"] = game.proton_path.name
     app_id = game.app.app_id
 
-    log("Шаг 1/2: protontricks dotnet48 (может занять 10–20 минут)…")
+    log(tr("Шаг 1/2: protontricks dotnet48 (может занять 10–20 минут)…"))
     rc = run_streaming([*cmd_base, app_id, "-q", "dotnet48"], env, log)
     if rc == 0 and prefix_dotnet_status(game.pfx) == DOTNET_REAL:
-        log("✔ .NET Framework 4.8 установлен.")
+        log(tr("✔ .NET Framework 4.8 установлен."))
         return True
 
     # Known failure: the dotnet40 prerequisite installer exits with code 67.
     # Retry with the .NET 4.8 installer alone on a win7 prefix (on some
     # Proton builds this fails too, with MSI error 1603).
-    log("Стандартная установка не удалась — пробую установить .NET 4.8 напрямую.")
+    log(tr("Стандартная установка не удалась — пробую установить .NET 4.8 напрямую."))
     installer = find_cached_ndp48(is_flatpak)
     if not installer:
-        log("Установщик .NET 4.8 не найден в кэше winetricks.")
+        log(tr("Установщик .NET 4.8 не найден в кэше winetricks."))
         return False
     rc = run_streaming([*cmd_base, app_id, "-q", "win7"], env, log)
-    log("Шаг 2/2: запуск установщика .NET 4.8…")
+    log(tr("Шаг 2/2: запуск установщика .NET 4.8…"))
     rc = run_streaming(
         [*cmd_base, "-c", f'wine "{installer}" /q /norestart', app_id], env, log
     )
     if prefix_dotnet_status(game.pfx) == DOTNET_REAL:
-        log("✔ .NET Framework 4.8 установлен.")
+        log(tr("✔ .NET Framework 4.8 установлен."))
         return True
-    log(f"✖ Установщик .NET 4.8 завершился с кодом {rc}.")
+    log(tr("✖ Установщик .NET 4.8 завершился с кодом {rc}.", rc=rc))
     return False
 
 
@@ -352,14 +352,14 @@ def find_cached_ndp48(is_flatpak: bool) -> Path | None:
 
 def restore_prefix(game: PrefixGame, archive: Path, log: Log, make_backup: bool = True) -> bool:
     if prefix_in_use(game.app.prefix_dir):
-        log("Префикс занят: закройте игру и трейнер, затем повторите.")
+        log(tr("Префикс занят: закройте игру и трейнер, затем повторите."))
         return False
     prefix = game.app.prefix_dir
     staging = prefix.parent / f".protonhook-restore-{game.app.app_id}"
     if staging.exists():
         shutil.rmtree(staging)
     staging.mkdir()
-    log(f"Распаковываю {archive}")
+    log(tr("Распаковываю {path}", path=archive))
     with tarfile.open(archive, "r:gz") as tar:
         try:
             tar.extractall(staging, filter="tar")
@@ -368,7 +368,7 @@ def restore_prefix(game: PrefixGame, archive: Path, log: Log, make_backup: bool 
     restored = staging / game.app.app_id
     if not (restored / "pfx").is_dir():
         shutil.rmtree(staging)
-        log(f"✖ В архиве нет префикса для appid {game.app.app_id}.")
+        log(tr("✖ В архиве нет префикса для appid {appid}.", appid=game.app.app_id))
         return False
 
     if make_backup:
@@ -380,7 +380,7 @@ def restore_prefix(game: PrefixGame, archive: Path, log: Log, make_backup: bool 
     restored.rename(prefix)
     shutil.rmtree(old)
     shutil.rmtree(staging)
-    log("✔ Префикс восстановлен.")
+    log(tr("✔ Префикс восстановлен."))
     return True
 
 
@@ -439,7 +439,7 @@ def find_unity_saves(game: PrefixGame) -> UnitySaves | None:
 
 def copy_saves(source: Path, target: Path, label: str, log: Log) -> bool:
     if not source.is_dir():
-        log(f"Нет папки с сейвами: {source}")
+        log(tr("Нет папки с сейвами: {path}", path=source))
         return False
     BACKUP_ROOT.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
@@ -447,7 +447,7 @@ def copy_saves(source: Path, target: Path, label: str, log: Log) -> bool:
         if directory.is_dir():
             dest = BACKUP_ROOT / f"saves-{label}-{stamp}-{name}"
             shutil.copytree(directory, dest)
-            log(f"Резервная копия {directory} → {dest}")
+            log(tr("Резервная копия {src} → {dest}", src=directory, dest=dest))
     target.mkdir(parents=True, exist_ok=True)
     copied = 0
     for path in source.rglob("*"):
@@ -457,8 +457,8 @@ def copy_saves(source: Path, target: Path, label: str, log: Log) -> bool:
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, dest)
         copied += 1
-    log(f"✔ Скопировано файлов: {copied} → {target}")
-    log("Если Steam при запуске спросит о конфликте облачных сохранений — выберите локальные файлы.")
+    log(tr("✔ Скопировано файлов: {n} → {path}", n=copied, path=target))
+    log(tr("Если Steam при запуске спросит о конфликте облачных сохранений — выберите локальные файлы."))
     log_debug(f"saves copied {source} -> {target} files={copied}")
     return True
 
@@ -481,64 +481,65 @@ def diagnose(
     checks: list[Check] = []
 
     if running_native is True:
-        checks.append(Check(False, "Игра запущена без Proton",
-                            "Нативная Linux-версия: Windows-трейнер к ней не подключится. "
-                            "Включите Proton в Steam → Свойства → Совместимость."))
+        checks.append(Check(False, tr("Игра запущена без Proton"),
+                            tr("Нативная Linux-версия: Windows-трейнер к ней не подключится. "
+                               "Включите Proton в Steam → Свойства → Совместимость.")))
     elif running_native is False:
-        checks.append(Check(True, "Игра запущена через Proton", ""))
+        checks.append(Check(True, tr("Игра запущена через Proton"), ""))
     else:
-        checks.append(Check(None, "Игра не запущена", "Для запуска трейнера игру нужно запустить."))
+        checks.append(Check(None, tr("Игра не запущена"), tr("Для запуска трейнера игру нужно запустить.")))
 
     if game.proton_path is None:
-        checks.append(Check(None, "Proton", "Не определён (игра ещё ни разу не запускалась через Proton?)"))
+        checks.append(Check(None, "Proton", tr("Не определён (игра ещё ни разу не запускалась через Proton?)")))
     elif is_experimental_proton(game.proton_path):
         checks.append(Check(False, f"Proton: {game.proton_path.name}",
-                            "Experimental часто ломает трейнеры. Выберите стабильный Proton в свойствах игры."))
+                            tr("Experimental часто ломает трейнеры. Выберите стабильный Proton в свойствах игры.")))
     else:
         checks.append(Check(True, f"Proton: {game.proton_path.name}", ""))
 
     status = prefix_dotnet_status(game.pfx)
+    status_text = tr(DOTNET_STATUS_TEXT[status])
     info = read_exe_info(trainer_path) if trainer_path and trainer_path.is_file() else None
     needs_dotnet = bool(info and info.is_dotnet)
     if status == DOTNET_REAL:
-        checks.append(Check(True, ".NET в префиксе", DOTNET_STATUS_TEXT[status]))
+        checks.append(Check(True, tr(".NET в префиксе"), status_text))
     elif status == DOTNET_NONE:
-        checks.append(Check(False, ".NET в префиксе", DOTNET_STATUS_TEXT[status] +
-                            ". Нажмите «Установить .NET 4.8» или восстановите префикс из копии."))
+        checks.append(Check(False, tr(".NET в префиксе"), status_text +
+                            tr(". Нажмите «Установить .NET 4.8» или восстановите префикс из копии.")))
     else:
-        checks.append(Check(False if needs_dotnet else None, ".NET в префиксе",
-                            DOTNET_STATUS_TEXT[status] +
-                            (". Трейнер написан на .NET — если он не видит игру, установите .NET 4.8."
+        checks.append(Check(False if needs_dotnet else None, tr(".NET в префиксе"),
+                            status_text +
+                            (tr(". Трейнер написан на .NET — если он не видит игру, установите .NET 4.8.")
                              if needs_dotnet else "")))
 
     if info:
-        kind = ".NET" if info.is_dotnet else "нативный"
-        bits = "64-бит" if info.is_64bit else "32-бит"
-        checks.append(Check(None, f"Трейнер: {kind}, {bits}", str(trainer_path)))
+        kind = ".NET" if info.is_dotnet else tr("нативный")
+        bits = tr("64-бит") if info.is_64bit else tr("32-бит")
+        checks.append(Check(None, tr("Трейнер: {kind}, {bits}", kind=kind, bits=bits), str(trainer_path)))
         running = find_trainer_pids(trainer_path) if trainer_path else []
         if len(running) > 0:
-            checks.append(Check(None, f"Трейнер уже запущен ({len(running)} шт.)",
-                                "Перед новым запуском ProtonHook закроет старые копии."))
+            checks.append(Check(None, tr("Трейнер уже запущен ({n} шт.)", n=len(running)),
+                                tr("Перед новым запуском ProtonHook закроет старые копии.")))
     elif trainer_path:
-        checks.append(Check(False, "Трейнер", f"Файл не найден или не является .exe: {trainer_path}"))
+        checks.append(Check(False, tr("Трейнер"), tr("Файл не найден или не является .exe: {path}", path=trainer_path)))
 
     saves = find_unity_saves(game)
     if saves:
         lm, wm = saves.linux_mtime, saves.windows_mtime
         if lm and (not wm or lm > wm + 60):
-            checks.append(Check(False, "Сейв Linux-версии новее Windows-сейва",
-                                f"Linux: {fmt_time(lm)}, Windows: {fmt_time(wm)}. "
-                                "Перенесите сейв кнопкой «Linux → Windows»."))
+            checks.append(Check(False, tr("Сейв Linux-версии новее Windows-сейва"),
+                                tr("Linux: {linux}, Windows: {windows}. Перенесите сейв кнопкой «Linux → Windows».",
+                                   linux=fmt_time(lm), windows=fmt_time(wm))))
         elif lm or wm:
-            checks.append(Check(True, "Сейвы Unity", f"Linux: {fmt_time(lm)}, Windows: {fmt_time(wm)}"))
+            checks.append(Check(True, tr("Сейвы Unity"), f"Linux: {fmt_time(lm)}, Windows: {fmt_time(wm)}"))
     return checks
 
 
 def fmt_time(ts: float | None) -> str:
-    return time.strftime("%d.%m.%Y %H:%M", time.localtime(ts)) if ts else "нет"
+    return time.strftime("%d.%m.%Y %H:%M", time.localtime(ts)) if ts else tr("нет")
 
 
-HELP_TEXT = """\
+HELP_TEXT_RU = """\
 <b>Как пользоваться</b>
 1. Запустите игру через Steam.
 2. Нажмите «Обновить», выберите игру слева.
@@ -573,3 +574,44 @@ ProtonHook сам пробует обходной путь (прямой уст�
 Общий: /tmp/protontrek.log, по игре: /tmp/protontrek-&lt;игра&gt;-&lt;appid&gt;.log
 Резервные копии: ~/ProtonHook-backups
 """
+
+
+HELP_TEXT_EN = """\
+<b>How to use</b>
+1. Start the game from Steam.
+2. Press Refresh and select the game on the left.
+3. Choose trainer.exe and press “Launch in prefix”.
+ProtonHook uses the same Proton and prefix as the game and closes old trainer instances.
+
+<b>“The game is running without Proton”</b>
+Steam started the native Linux build. A Windows trainer cannot attach to it.
+Steam → game Properties → Compatibility → “Force the use of a specific Steam Play compatibility tool” → a stable Proton. Restart the game.
+Linux and Windows builds keep saves in different places — copy them on the Diagnostics tab (“Save Linux → Windows”, works for Unity games).
+
+<b>The trainer window doesn't appear</b>
+Usually caused by Proton Experimental. Choose a stable Proton (e.g. Proton 9/10/11 or GE-Proton) and restart the game.
+
+<b>The trainer opens but can't see the game (empty Process ID)</b>
+1. Make sure the trainer version matches the game version.
+2. If the trainer is built on .NET (see Diagnostics) and the prefix only has wine-mono, press “Install .NET 4.8”. The game must be closed. ProtonHook backs up the prefix first.
+3. Try another launch mode or a 10–20 second delay.
+
+<b>.NET installation failed</b>
+ProtonHook tries a workaround (the .NET 4.8 installer directly) and, if that fails too, automatically rolls the prefix back.
+On newer Proton versions (10, 11) the .NET Framework installer often fails with MSI error 1603. The trainer then runs on wine-mono; if it can't see the game, try another trainer version or launch mode.
+You can restore the prefix manually with “Restore prefix…”.
+
+<b>Steam asks about a cloud save conflict</b>
+After copying a save, choose the local files, otherwise Steam restores the old save from the cloud.
+
+<b>Online games and anti-cheat</b>
+Trainers in games with anti-cheat (EAC, BattlEye, etc.) can get you banned. Use them in single-player games only.
+
+<b>Logs</b>
+General: /tmp/protontrek.log, per game: /tmp/protontrek-&lt;game&gt;-&lt;appid&gt;.log
+Backups: ~/ProtonHook-backups
+"""
+
+
+def help_text() -> str:
+    return HELP_TEXT_EN if get_language() == "en" else HELP_TEXT_RU

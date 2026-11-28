@@ -10,6 +10,7 @@ a = Analysis(
     hiddenimports=[
         "gtk_ui",
         "protonhook_tools",
+        "i18n",
         "gi.repository.Gtk",
         "gi.repository.GLib",
         "gi.repository.Pango",
