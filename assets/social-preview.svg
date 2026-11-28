@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="ProtonHook — Windows trainers. Native experience.">
+  <title>ProtonHook — Windows trainers. Native experience.</title>
+  <!-- GitHub social preview (Settings → General → Social preview), 1280×640. -->
+  <defs>
+    <style>
+      .mono { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
+      .head { font-family: 'Space Grotesk', Inter, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="640" fill="#0D0E12"/>
+  <rect x="32.5" y="32.5" width="1215" height="575" rx="12" fill="none" stroke="#30313A"/>
+
+  <!-- Metadata row -->
+  <text x="96" y="118" class="mono" font-size="18" letter-spacing="3" fill="#8B8C97">SITHOND / PROJECTS</text>
+  <text x="1184" y="118" class="mono" font-size="18" letter-spacing="3" fill="#8B8C97" text-anchor="end">LINUX / GAMING</text>
+
+  <!-- Logo -->
+  <g transform="translate(96 178)">
+    <g fill="none" stroke="#6E6F7A" stroke-width="3" stroke-linecap="square">
+      <path d="M6 22 V6 H22"/>
+      <path d="M74 6 H90 V22"/>
+      <path d="M90 74 V90 H74"/>
+      <path d="M22 90 H6 V74"/>
+    </g>
+    <path d="M57 14 L27 53 H45 L37 82 L69 41 H51 Z" fill="#A39AF5"/>
+  </g>
+
+  <!-- Title -->
+  <text x="90" y="372" class="head" font-size="104" font-weight="700" fill="#F0F0F3">ProtonHook<tspan fill="#A39AF5">.</tspan></text>
+  <text x="96" y="432" class="head" font-size="34" fill="#B4B5BF">Windows trainers. Native experience.</text>
+
+  <!-- Gamepad icon -->
+  <g transform="translate(1004 300) scale(1.5)" fill="none" stroke="#A39AF5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 14 H90 C106 14 116 26 116 42 V58 C116 74 104 84 92 80 L78 70 H38 L24 80 C12 84 0 74 0 58 V42 C0 26 10 14 26 14 Z"/>
+    <path d="M28 40 V56 M20 48 H36"/>
+    <circle cx="84" cy="42" r="2.5" fill="#A39AF5"/>
+    <circle cx="94" cy="54" r="2.5" fill="#A39AF5"/>
+  </g>
+
+  <!-- Footer -->
+  <line x1="96" y1="500" x2="1184" y2="500" stroke="#30313A"/>
+  <text x="96" y="550" class="mono" font-size="18" fill="#8B8C97">sithond.com</text>
+  <text x="1184" y="550" class="mono" font-size="18" fill="#8B8C97" text-anchor="end">Built with curiosity.</text>
+</svg>
